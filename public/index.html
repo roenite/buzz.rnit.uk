@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BuzzIn – Live Buzzer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="page-landing" class="page active">
+    <div class="hero">
+      <div class="logo">⚡ BuzzIn</div>
+      <p class="tagline">Real-time buzzer system for quizzes & games</p>
+      <div class="landing-buttons">
+        <button class="btn btn-primary btn-lg" onclick="showPage('page-host-setup')">🎤 Host a Game</button>
+        <button class="btn btn-secondary btn-lg" onclick="showPage('page-join')">🙋 Join a Game</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-host-setup" class="page">
+    <div class="card">
+      <h2>Create a Game</h2>
+      <label>Your Name (optional)</label>
+      <input id="host-name" type="text" placeholder="Host" maxlength="24" />
+      <button class="btn btn-primary mt" id="btn-create-room">Create Room</button>
+      <button class="btn btn-ghost mt-sm" onclick="showPage('page-landing')">← Back</button>
+    </div>
+  </div>
+
+  <div id="page-join" class="page">
+    <div class="card">
+      <h2>Join a Game</h2>
+      <label>Game Code</label>
+      <input id="join-code" type="text" placeholder="ABC123" maxlength="6" style="text-transform:uppercase" />
+      <label class="mt-sm">Your Nickname</label>
+      <input id="join-name" type="text" placeholder="Your name" maxlength="24" />
+      <div id="join-error" class="error hidden"></div>
+      <button class="btn btn-primary mt" id="btn-join">Join!</button>
+      <button class="btn btn-ghost mt-sm" onclick="showPage('page-landing')">← Back</button>
+    </div>
+  </div>
+
+  <!-- HOST ROOM -->
+  <div id="page-host-room" class="page">
+    <div class="host-layout">
+
+      <div class="host-header">
+        <div class="logo-sm">⚡ BuzzIn</div>
+        <div class="room-code-badge">Room: <strong id="host-room-code"></strong></div>
+        <div class="host-status" id="host-status-badge"></div>
+      </div>
+
+      <div class="sound-panel">
+        <h3>Buzzer Sound (Host only)</h3>
+        <div class="muted">Upload an mp3/wav. Only the host device will play it when anyone buzzes.</div>
+        <div class="sound-row">
+          <input id="buzz-sound-file" type="file" accept="audio/*" />
+          <button class="btn btn-info" id="btn-test-buzz-sound">Test sound</button>
+          <button class="btn btn-ghost" id="btn-clear-buzz-sound">Use default beep</button>
+        </div>
+      </div>
+
+      <div class="answer-timer-panel">
+        <div class="answer-timer-row" style="align-items:flex-end">
+          <div>
+            <h3 style="margin-bottom:.2rem">Team Buzzing Mode</h3>
+            <div class="muted">Choose whether a team can buzz again after a pass/time-out, or only once per question.</div>
+          </div>
+
+          <div class="answer-timer-controls">
+            <label style="margin:0">Mode</label>
+            <select id="team-buzz-mode">
+              <option value="one_at_a_time">One at a time (can re-buzz after cleared)</option>
+              <option value="one_per_question">One per question (blocked until Reset Buzzers)</option>
+            </select>
+            <button class="btn btn-info" id="btn-set-team-buzz-mode">Set</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="answer-timer-panel">
+        <div class="answer-timer-row">
+          <div>
+            <h3 style="margin-bottom:.2rem">Answer Timer</h3>
+            <div class="muted" id="answer-timer-who">No one answering</div>
+          </div>
+
+          <div class="answer-timer-controls">
+            <label style="margin:0">Answer seconds</label>
+            <input id="answer-seconds" type="number" min="1" max="300" value="8" />
+            <button class="btn btn-info" id="btn-set-answer-seconds">Set</button>
+            <button class="btn btn-warning" id="btn-clear-answer">Clear (Pass)</button>
+          </div>
+        </div>
+
+        <div id="answer-timer-display" class="timer-display hidden">
+          <span id="answer-timer-value">8</span>
+        </div>
+      </div>
+
+      <div class="buzz-order-panel">
+        <h3>Buzz Queue</h3>
+        <div id="buzz-order-list" class="buzz-order-list">
+          <p class="muted">No one has buzzed yet.</p>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn btn-success" id="btn-reset">🔄 Reset Buzzers</button>
+        <button class="btn btn-warning" id="btn-lock-toggle">🔒 Lock All</button>
+      </div>
+
+      <div class="players-panel">
+        <h3>Players (<span id="player-count">0</span>)</h3>
+        <table id="players-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Team</th>
+              <th>Score (shared by team)</th>
+              <th>Score (type to set)</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="players-tbody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PLAYER ROOM -->
+  <div id="page-player-room" class="page">
+    <div class="player-layout">
+      <div class="player-header">
+        <div class="logo-sm">⚡ BuzzIn</div>
+        <div class="room-code-badge">Room: <strong id="player-room-code"></strong></div>
+        <div class="player-name-badge">👤 <span id="player-display-name"></span></div>
+      </div>
+
+      <div class="player-answer-panel">
+        <div class="muted" id="player-answer-who">Waiting…</div>
+        <div id="player-answer-timer-display" class="timer-display hidden">
+          <span id="player-answer-timer-value">8</span>
+        </div>
+      </div>
+
+      <div class="buzzer-area">
+        <button id="btn-buzz" class="buzz-button">
+          <span class="buzz-icon">⚡</span>
+          <span class="buzz-label">BUZZ!</span>
+        </button>
+        <div id="buzz-status" class="buzz-status"></div>
+      </div>
+
+      <div class="player-buzz-order">
+        <h3>Buzz Queue</h3>
+        <div id="player-buzz-order-list" class="buzz-order-list">
+          <p class="muted">No one has buzzed yet.</p>
+        </div>
+      </div>
+
+      <div class="player-scores">
+        <h3>Scores</h3>
+        <div id="player-scores-list" class="scores-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
